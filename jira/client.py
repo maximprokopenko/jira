@@ -1500,6 +1500,8 @@ class JIRA(object):
             data["requestTypeId"] = p
         elif isinstance(p, str):
             data["requestTypeId"] = self.request_type_by_name(service_desk, p).id
+            
+        requestParticipants = data.pop('requestParticipants', None)
 
         url = self._options["server"] + "/rest/servicedeskapi/request"
         headers = {"X-ExperimentalApi": "opt-in"}
@@ -1508,6 +1510,20 @@ class JIRA(object):
         raw_issue_json = json_loads(r)
         if "issueKey" not in raw_issue_json:
             raise JIRAError(r.status_code, request=r)
+            
+        if requestParticipants:
+            url = (
+                self._options['server']
+                + '/rest/servicedeskapi/request/%s/participant' % raw_issue_json['issueKey']
+            )
+            headers = {'X-ExperimentalApi': 'opt-in'}
+            data = {'accountIds': requestParticipants}
+
+            r = self._session.post(url, headers=headers, json=data)
+
+            if r.status_code != status.HTTP_200_OK:
+                raise JIRAError(r.status_code, request=r)            
+            
         if prefetch:
             return self.issue(raw_issue_json["issueKey"])
         else:
