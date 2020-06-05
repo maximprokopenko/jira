@@ -1521,7 +1521,7 @@ class JIRA(object):
 
             r = self._session.post(url, headers=headers, json=data)
 
-            if r.status_code != status.HTTP_200_OK:
+            if r.status_code != 200:
                 raise JIRAError(r.status_code, request=r)            
             
         if prefetch:
